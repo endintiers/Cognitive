@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>WildMouse.Unearth.Cognitive.TextAnalytics</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>chrish</authors>
+    <owners>chrish</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Making it easier to call Cognitive Services Text Analytics APIs</description>
+    <releaseNotes>Targets V2 of the Text Analytics APIs</releaseNotes>
+    <copyright>Copyright 2017</copyright>
+    <tags>Cognitive Services Text Analytics TextAnalytics</tags>
+  </metadata>
+</package>
