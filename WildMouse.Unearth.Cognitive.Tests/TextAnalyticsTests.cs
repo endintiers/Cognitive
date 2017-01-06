@@ -133,6 +133,25 @@ namespace WildMouse.Unearth.Tests
             Assert.AreEqual(0, response.operationProcessingResult.errors.Count);
         }
 
+        [TestMethod]
+        public async Task TestDetectTopicsInsufficientStrings()
+        {
+            var client = new TopicsClient(_textAnalyticsAPIKey);
+
+            var request = new TopicsRequest();
+            request.stopWords = new List<string>();
+            request.topicsToExclude = new List<string>();
+            request.documents = new List<TopicsRequest.Document>();
+            request.documents.Add(new TopicsRequest.Document()
+            { id = "1", text = "Well, this wont work at all" });
+            request.documents.Add(new TopicsRequest.Document()
+            { id = "2", text = "But how doesn't it work?" });
+
+            var response = await client.DetectTopics(request);
+
+            Assert.AreEqual("FailedToStart", response.status);
+        }
+
         private string[] GetOneHundredStrings()
         {
             var oneHundredStrings = new List<string>();

@@ -23,11 +23,17 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics.Contract
             public double distance { get; set; }
         }
 
+        public class Error
+        {
+            public string id { get; set; }
+            public string message { get; set; }
+        }
+
         public class OperationProcessingResult
         {
             public List<Topic> topics { get; set; }
             public List<TopicAssignment> topicAssignments { get; set; }
-            public List<object> errors { get; set; }
+            public List<Error> errors { get; set; }
             public string discriminator { get; set; }
         }
 

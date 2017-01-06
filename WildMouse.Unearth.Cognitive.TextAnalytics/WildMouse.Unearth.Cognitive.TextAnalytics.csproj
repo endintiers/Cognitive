@@ -48,6 +48,7 @@
     <Compile Include="Contract\DetectLanguageResponse.cs" />
     <Compile Include="Contract\SentimentRequest.cs" />
     <Compile Include="Contract\SentimentResponse.cs" />
+    <Compile Include="Contract\TopicsInitialResult.cs" />
     <Compile Include="Contract\TopicsRequest.cs" />
     <Compile Include="Contract\TopicsResponse.cs" />
     <Compile Include="Contract\KeyPhrasesRequest.cs" />
