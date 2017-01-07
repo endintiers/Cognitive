@@ -39,7 +39,7 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<TopicsResponse> DetectTopics(TopicsRequest request)
+        public async Task<TopicsResponse> DetectTopicsAsync(TopicsRequest request)
         {
             TopicsResponse response = new TopicsResponse();
 

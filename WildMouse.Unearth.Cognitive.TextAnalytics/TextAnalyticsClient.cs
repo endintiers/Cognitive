@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using WildMouse.Unearth.Cognitive.TextAnalytics.Contract;
 
@@ -32,7 +31,13 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
             _sentimentUri = sentimentUri;
             _languagesUri = languagesUri;
         }
-        public async Task<List<string>> GetKeyPhrasesForText(string textToExamine, string language = "en")
+
+        public List<string> GetKeyPhrasesForText(string textToExamine, string language = "en")
+        {
+            return AsyncHelper.RunSync(() => GetKeyPhrasesForTextAsync(textToExamine, language));
+        }
+
+        public async Task<List<string>> GetKeyPhrasesForTextAsync(string textToExamine, string language = "en")
         {
             List<string> response;
 
@@ -41,15 +46,25 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
             request.documents.Add(new KeyPhrasesRequest.Document()
             { id = "1", language = language, text = textToExamine });
 
-            var resp = await GetKeyPhrases(request);
+            var resp = await GetKeyPhrasesAsync(request);
+
+            if (resp.errors.Count > 0)
+            {
+                throw new ApplicationException("Error calling KeyPhrases: " + resp.errors[0].message);
+            }
+
+            if (resp.documents.Count < 1)
+            {
+                throw new ApplicationException("Error calling KeyPhrases: No document returned.");
+            }
 
             response = resp.documents[0].keyPhrases;
             return response;
         }
 
-        public async Task<KeyPhrasesResponse> GetKeyPhrases(KeyPhrasesRequest request)
+        public async Task<KeyPhrasesResponse> GetKeyPhrasesAsync(KeyPhrasesRequest request)
         {
-            KeyPhrasesResponse response;
+            KeyPhrasesResponse response = null; 
 
             using (var client = new HttpClient())
             {
@@ -63,31 +78,39 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
                 byte[] byteData = Encoding.UTF8.GetBytes(jsonRequest);
 
                 var jsResponse = await CallEndpoint(client, _keyPhraseUri, byteData);
+
                 response = JsonConvert.DeserializeObject<KeyPhrasesResponse>(jsResponse);
+
+                if (response == null || response.errors == null)
+                {
+                    // failed to convert - unexpected jsResponse
+                    response = new KeyPhrasesResponse();
+                    response.documents = new List<KeyPhrasesResponse.Document>();
+                    var err = new KeyPhrasesResponse.Error() { id = "1", message = jsResponse };
+                    response.errors = new List<KeyPhrasesResponse.Error>() { err };
+                }
 
                 if (response.errors.Count > 0)
                 {
-                    // Retry
                     Trace.TraceWarning("Error calling text analytics key phrases: " + response.errors[0].message);
-                    Thread.Sleep(200);
-                    jsResponse = await CallEndpoint(client, _keyPhraseUri, byteData);
-                    response = JsonConvert.DeserializeObject<KeyPhrasesResponse>(jsResponse);
-                    if (response.errors.Count > 0)
-                    {
-                        Trace.TraceWarning("Error calling text analytics key phrases: " + response.errors[0].message);
-                    }
                 }
+
             }
             return response;
         }
 
-        public async Task<double> GetSentimentForText(string textToExamine, string language = "en")
+        public double GetSentimentForText(string textToExamine, string language = "en")
+        {
+            return AsyncHelper.RunSync(() => GetSentimentForTextAsync(textToExamine, language));
+        }
+
+        public async Task<double> GetSentimentForTextAsync(string textToExamine, string language = "en")
         {
             var request = new SentimentRequest() {documents = new List<SentimentRequest.Document>()};
             request.documents.Add(new SentimentRequest.Document()
                 {language = language, id = "1", text = textToExamine});
 
-            var response = await GetSentiment(request);
+            var response = await GetSentimentAsync(request);
 
             if (response.errors.Count > 0)
             {
@@ -104,9 +127,9 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
         }
 
 
-        public async Task<SentimentResponse> GetSentiment(SentimentRequest request)
+        public async Task<SentimentResponse> GetSentimentAsync(SentimentRequest request)
         {
-            var response = new SentimentResponse();
+            SentimentResponse response = null;
 
             using (var client = new HttpClient())
             {
@@ -121,17 +144,37 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
                 var jsResponse = await CallEndpoint(client, _sentimentUri, byteData);
 
                 response = JsonConvert.DeserializeObject<SentimentResponse>(jsResponse);
+
+                if (response == null || response.errors == null)
+                {
+                    // failed to convert - unexpected jsResponse
+                    response = new SentimentResponse();
+                    response.documents = new List<SentimentResponse.Document>();
+                    var err = new SentimentResponse.Error() { id = "1", message = jsResponse };
+                    response.errors = new List<SentimentResponse.Error>() { err };
+                }
+
+                if (response.errors.Count > 0)
+                {
+                    Trace.TraceWarning("Error calling text analytics sentiment: " + response.errors[0].message);
+                }
+
             }
             return response;
         }
 
-        public async Task<string> DetectLanguageForText(string textToExamine)
+        public string DetectLanguageForText(string textToExamine)
+        {
+            return AsyncHelper.RunSync(() => DetectLanguageForTextAsync(textToExamine));
+        }
+
+        public async Task<string> DetectLanguageForTextAsync(string textToExamine)
         {
             var request = new DetectLanguageRequest() { documents = new List<DetectLanguageRequest.Document>() };
             request.documents.Add(new DetectLanguageRequest.Document()
             { id = "1", text = textToExamine });
 
-            var response = await DetectLanguages(request);
+            var response = await DetectLanguagesAsync(request);
 
             if (response.errors.Count > 0)
             {
@@ -153,9 +196,9 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
         }
 
 
-        public async Task<DetectLanguageResponse> DetectLanguages(DetectLanguageRequest request)
+        public async Task<DetectLanguageResponse> DetectLanguagesAsync(DetectLanguageRequest request)
         {
-            var response = new DetectLanguageResponse();
+            DetectLanguageResponse response = null;
 
             using (var client = new HttpClient())
             {
@@ -170,6 +213,20 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
                 var jsResponse = await CallEndpoint(client, _languagesUri, byteData);
 
                 response = JsonConvert.DeserializeObject<DetectLanguageResponse>(jsResponse);
+
+                if (response == null || response.errors == null)
+                {
+                    // failed to convert - unexpected jsResponse
+                    response = new DetectLanguageResponse();
+                    response.documents = new List<DetectLanguageResponse.Document>();
+                    var err = new DetectLanguageResponse.Error() { id = "1", message = jsResponse };
+                    response.errors = new List<DetectLanguageResponse.Error>() { err };
+                }
+
+                if (response.errors.Count > 0)
+                {
+                    Trace.TraceWarning("Error calling text analytics languages: " + response.errors[0].message);
+                }
             }
             return response;
         }

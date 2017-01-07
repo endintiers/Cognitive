@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using WildMouse.Unearth.Cognitive.TextAnalytics;
@@ -13,20 +14,28 @@ namespace WildMouse.Unearth.Tests
     [TestClass]
     public class TextAnalyticsTests
     {
-
-        private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
+        //private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
+        private const string _textAnalyticsAPIKey = "d3e39106e56a47c98cb03201beadac22";
 
         [TestMethod]
-        public async Task TestKeyPhrasesText()
+        public void TestKeyPhrasesText()
+        {
+            // Warning - avoid use of synchronous versions of methods in ASP.NET
+            var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
+            var keyPhrases = client.GetKeyPhrasesForText("Cada uno sabe (a) donde le aprieta el zapato.", "es");
+            Assert.AreEqual("zapato", keyPhrases[0]);
+        }
+
+        [TestMethod]
+        public async Task TestKeyPhrasesTextAsync()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
-            // Call for a single document
-            var keyPhrases = await client.GetKeyPhrasesForText("How now, brown cow?");
+            var keyPhrases = await client.GetKeyPhrasesForTextAsync("How now, brown cow?");
             Assert.AreEqual("brown cow", keyPhrases[0]);
         }
 
         [TestMethod]
-        public async Task TestKeyPhrasesContract()
+        public async Task TestKeyPhrasesAsyncContract()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
 
@@ -38,25 +47,36 @@ namespace WildMouse.Unearth.Tests
             { id = "2", language = "en", text = "Trust, but verify" });
 
             // Call for multiple documents
-            var response = await client.GetKeyPhrases(request);
+            var response = await client.GetKeyPhrasesAsync(request);
 
             Assert.AreEqual(0, response.errors.Count);
             Assert.AreEqual(2, response.documents.Count);
         }
 
         [TestMethod]
-        public async Task TestSentimentText()
+        public void TestSentimentText()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
             // Call for a single document
-            var score = await client.GetSentimentForText("What a wonderful day this is.");
+            var score = client.GetSentimentForText("Son tout bon.", "fr");
             Assert.IsTrue(score > 0.5); // Positive
-            score = await client.GetSentimentForText("This is the worst lunch I have ever had.", "en");
+            score = client.GetSentimentForText("Its far to hot here in Melbourne.");
             Assert.IsTrue(score < 0.5); // Negative
         }
 
         [TestMethod]
-        public async Task TestSentimentContract()
+        public async Task TestSentimentTextAsync()
+        {
+            var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
+            // Call for a single document
+            var score = await client.GetSentimentForTextAsync("What a wonderful day this is.");
+            Assert.IsTrue(score > 0.5); // Positive
+            score = await client.GetSentimentForTextAsync("This is the worst lunch I have ever had.", "en");
+            Assert.IsTrue(score < 0.5); // Negative
+        }
+
+        [TestMethod]
+        public async Task TestSentimentAsyncContract()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
 
@@ -68,25 +88,36 @@ namespace WildMouse.Unearth.Tests
             { id = "2", language = "en", text = "This is the worst lunch I have ever had." });
 
             // Call for multiple documents
-            var response = await client.GetSentiment(request);
+            var response = await client.GetSentimentAsync(request);
 
             Assert.AreEqual(0, response.errors.Count);
             Assert.AreEqual(2, response.documents.Count);
         }
 
         [TestMethod]
-        public async Task TestDetectLanguagesText()
+        public void TestDetectLanguagesText()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
             // Call for a single document
-            var language = await client.DetectLanguageForText("The Economist is undoubtedly the smartest weekly newsmagazine in the English language. I always look forward to its quirky year-end double issue.");
+            var language = client.DetectLanguageForText("苦あれば楽あり");
+            Assert.AreEqual("ja", language);
+            language = client.DetectLanguageForText("Alah bisa karena biasa.");
+            Assert.AreEqual("id", language);
+        }
+
+        [TestMethod]
+        public async Task TestDetectLanguagesTextAsync()
+        {
+            var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
+            // Call for a single document
+            var language = await client.DetectLanguageForTextAsync("The Economist is undoubtedly the smartest weekly newsmagazine in the English language. I always look forward to its quirky year-end double issue.");
             Assert.AreEqual("en", language);
-            language = await client.DetectLanguageForText("Anfangen ist leicht, Beharren eine Kunst.");
+            language = await client.DetectLanguageForTextAsync("Anfangen ist leicht, Beharren eine Kunst.");
             Assert.AreEqual("de", language);
         }
 
         [TestMethod]
-        public async Task TestDetectLanguagesContract()
+        public async Task TestDetectLanguagesAsyncContract()
         {
             var client = new TextAnalyticsClient(_textAnalyticsAPIKey);
 
@@ -98,7 +129,7 @@ namespace WildMouse.Unearth.Tests
             { id = "2", text = "No dejes para mañana lo que puedas hacer hoy." });
 
             // Call for multiple documents
-            var response = await client.DetectLanguages(request);
+            var response = await client.DetectLanguagesAsync(request);
 
             Assert.AreEqual(0, response.errors.Count);
             Assert.AreEqual(2, response.documents.Count);
@@ -127,7 +158,7 @@ namespace WildMouse.Unearth.Tests
             // Detect Topics (at least 100 documents)
             // Documents should have a common theme. Random text will fail with "Internal error while executing BES operation."
             // Runs batch, will take 5-10 minutes. Status shown in Debug Output every 60 seconds
-            var response = await client.DetectTopics(request);
+            var response = await client.DetectTopicsAsync(request);
 
             Assert.AreEqual("Succeeded", response.status);
             Assert.AreEqual(0, response.operationProcessingResult.errors.Count);
@@ -147,7 +178,7 @@ namespace WildMouse.Unearth.Tests
             request.documents.Add(new TopicsRequest.Document()
             { id = "2", text = "But how doesn't it work?" });
 
-            var response = await client.DetectTopics(request);
+            var response = await client.DetectTopicsAsync(request);
 
             Assert.AreEqual("FailedToStart", response.status);
         }
