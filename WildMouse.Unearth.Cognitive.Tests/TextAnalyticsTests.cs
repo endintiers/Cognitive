@@ -14,8 +14,7 @@ namespace WildMouse.Unearth.Tests
     [TestClass]
     public class TextAnalyticsTests
     {
-        //private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
-        private const string _textAnalyticsAPIKey = "d3e39106e56a47c98cb03201beadac22";
+        private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
 
         [TestMethod]
         public void TestKeyPhrasesText()
@@ -60,7 +59,7 @@ namespace WildMouse.Unearth.Tests
             // Call for a single document
             var score = client.GetSentimentForText("Son tout bon.", "fr");
             Assert.IsTrue(score > 0.5); // Positive
-            score = client.GetSentimentForText("Its far to hot here in Melbourne.");
+            score = client.GetSentimentForText("Its far too hot here in Melbourne.");
             Assert.IsTrue(score < 0.5); // Negative
         }
 
