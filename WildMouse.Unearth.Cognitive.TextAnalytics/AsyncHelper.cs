@@ -13,7 +13,7 @@ namespace WildMouse.Unearth.Cognitive.TextAnalytics
           TaskFactory(CancellationToken.None,
                       TaskCreationOptions.None,
                       TaskContinuationOptions.None,
-                      TaskScheduler.Default);
+                      TaskScheduler.Default); 
 
         public static TResult RunSync<TResult>(Func<Task<TResult>> func)
         {
