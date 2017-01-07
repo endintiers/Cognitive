@@ -14,8 +14,7 @@ namespace WildMouse.Unearth.Tests
     [TestClass]
     public class TextAnalyticsTests
     {
-        //private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
-        private const string _textAnalyticsAPIKey = "d3e39106e56a47c98cb03201beadac22";
+        private const string _textAnalyticsAPIKey = "{your text analytics API Key here}";
 
         [TestMethod]
         public void TestKeyPhrasesText()
